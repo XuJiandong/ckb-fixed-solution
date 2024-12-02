@@ -489,6 +489,7 @@ dependencies = [
 name = "ckb-fixed-tests"
 version = "0.1.0"
 dependencies = [
+ "ckb-fixed",
  "wasmer",
 ]
 

@@ -1,4 +1,4 @@
 
 
 wasm-pack:
-	wasm-pack build --debug --target web
+	wasm-pack build --target web
