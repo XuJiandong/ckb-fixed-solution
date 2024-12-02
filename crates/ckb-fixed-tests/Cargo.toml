@@ -1,0 +1,11 @@
+[package]
+name = "ckb-fixed-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+
+[dev-dependencies]
+wasmer = "5.0.2"
+
