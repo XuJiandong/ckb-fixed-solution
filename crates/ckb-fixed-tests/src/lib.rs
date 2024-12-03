@@ -1,7 +1,19 @@
-use wasmer::{Instance, Store, TypedFunction};
+pub use ckb_fixed;
+pub use wasmer::{Instance, Store, TypedFunction, Value};
 
 #[cfg(test)]
 mod tests;
+
+#[derive(Debug)]
+pub enum Error {
+    General,
+    Ln,
+    Exp,
+    Pow,
+    FromNum,
+    FromStr,
+    New,
+}
 
 pub fn initialize_wasmer() -> (Store, Instance) {
     use wasmer::{imports, Module};
@@ -40,45 +52,8 @@ pub fn i64f64_add(store: &mut Store, instance: &Instance, a: i32, b: i32) -> i32
     result
 }
 
-pub fn i64f64_ln(store: &mut Store, instance: &Instance, a: i32) -> i32 {
-    // Get memory export
-    let memory = instance.exports.get_memory("memory").unwrap();
-
-    // Setup the stack pointer
-    let add_to_stack_pointer: TypedFunction<i32, i32> = instance
-        .exports
-        .get_function("__wbindgen_add_to_stack_pointer")
-        .unwrap()
-        .typed(store)
-        .unwrap();
-
-    // Allocate 16 bytes for the return value
-    let ret_ptr = add_to_stack_pointer.call(store, -16).unwrap();
-
-    // Call i64f64_ln with input value
-    let ln: TypedFunction<(i32, i32), ()> = instance
-        .exports
-        .get_function("i64f64_ln")
-        .unwrap()
-        .typed(store)
-        .unwrap();
-    ln.call(store, ret_ptr, a).unwrap();
-
-    let view = memory.view(store);
-    let read_i32 = |ptr: i32| -> i32 {
-        let mut bytes = [0u8; 4];
-        view.read(ptr as u64, &mut bytes).unwrap();
-        i32::from_le_bytes(bytes)
-    };
-
-    let value = read_i32(ret_ptr);
-    let is_error = read_i32(ret_ptr + 8);
-    if is_error != 0 {
-        panic!("High bits are not zero");
-    }
-
-    add_to_stack_pointer.call(store, 16).unwrap();
-    value
+pub fn i64f64_ln(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {
+    call_with_result(store, instance, "i64f64_ln", vec![Value::I32(a)]).map_err(|_| Error::Ln)
 }
 
 pub fn to_le_bytes(store: &mut Store, instance: &Instance, ptr: i32) -> Vec<u8> {
@@ -124,7 +99,7 @@ pub fn to_le_bytes(store: &mut Store, instance: &Instance, ptr: i32) -> Vec<u8> 
     // Free the allocated memory
     let free: TypedFunction<(i32, i32, i32), ()> = instance
         .exports
-        .get_function("__wbindgen_free")
+        .get_function("__wbindgen_export_2")
         .unwrap()
         .typed(store)
         .unwrap();
@@ -136,7 +111,7 @@ pub fn to_le_bytes(store: &mut Store, instance: &Instance, ptr: i32) -> Vec<u8> 
     result
 }
 
-pub fn new(store: &mut Store, instance: &Instance, inner: &[u8]) -> i32 {
+pub fn new(store: &mut Store, instance: &Instance, inner: &[u8]) -> Result<i32, Error> {
     // Get memory export
     let memory = instance.exports.get_memory("memory").unwrap();
 
@@ -154,7 +129,7 @@ pub fn new(store: &mut Store, instance: &Instance, inner: &[u8]) -> i32 {
     // Allocate memory for the input array and copy the bytes
     let malloc: TypedFunction<(i32, i32), i32> = instance
         .exports
-        .get_function("__wbindgen_malloc")
+        .get_function("__wbindgen_export_0")
         .unwrap()
         .typed(store)
         .unwrap();
@@ -186,7 +161,7 @@ pub fn new(store: &mut Store, instance: &Instance, inner: &[u8]) -> i32 {
     };
 
     let r0 = read_i32(retptr);
-    let r1 = read_i32(retptr + 4);
+    let _r1 = read_i32(retptr + 4);
     let r2 = read_i32(retptr + 8);
 
     // Clean up the stack
@@ -194,13 +169,13 @@ pub fn new(store: &mut Store, instance: &Instance, inner: &[u8]) -> i32 {
 
     // Handle error case
     if r2 != 0 {
-        panic!("Error creating I64F64: {}", r1);
+        return Err(Error::New);
     }
 
-    r0
+    Ok(r0)
 }
 
-pub fn from_str(store: &mut Store, instance: &Instance, s: &str) -> i32 {
+pub fn from_str(store: &mut Store, instance: &Instance, s: &str) -> Result<i32, Error> {
     // Get memory export
     let memory = instance.exports.get_memory("memory").unwrap();
 
@@ -218,7 +193,7 @@ pub fn from_str(store: &mut Store, instance: &Instance, s: &str) -> i32 {
     // Allocate memory for the input string and copy the bytes
     let malloc: TypedFunction<(i32, i32), i32> = instance
         .exports
-        .get_function("__wbindgen_malloc")
+        .get_function("__wbindgen_export_0")
         .unwrap()
         .typed(store)
         .unwrap();
@@ -248,7 +223,7 @@ pub fn from_str(store: &mut Store, instance: &Instance, s: &str) -> i32 {
     };
 
     let r0 = read_i32(retptr);
-    let r1 = read_i32(retptr + 4);
+    let _r1 = read_i32(retptr + 4);
     let r2 = read_i32(retptr + 8);
 
     // Clean up the stack
@@ -256,13 +231,38 @@ pub fn from_str(store: &mut Store, instance: &Instance, s: &str) -> i32 {
 
     // Handle error case
     if r2 != 0 {
-        panic!("Error parsing string: {}", r1);
+        return Err(Error::FromStr);
     }
 
-    r0
+    Ok(r0)
 }
 
-pub fn i64f64_pow(store: &mut Store, instance: &Instance, base: i32, exponent: i32) -> i32 {
+pub fn i64f64_pow(
+    store: &mut Store,
+    instance: &Instance,
+    base: i32,
+    exponent: i32,
+) -> Result<i32, Error> {
+    call_with_result(
+        store,
+        instance,
+        "i64f64_pow",
+        vec![Value::I32(base), Value::I32(exponent)],
+    )
+    .map_err(|_| Error::Pow)
+}
+
+pub fn from_num(store: &mut Store, instance: &Instance, n: i64) -> Result<i32, Error> {
+    call_with_result(store, instance, "i64f64_from_num", vec![Value::I64(n)])
+        .map_err(|_| Error::FromNum)
+}
+
+pub fn call_with_result(
+    store: &mut Store,
+    instance: &Instance,
+    fn_name: &'static str,
+    args: Vec<Value>,
+) -> Result<i32, Error> {
     // Get memory export
     let memory = instance.exports.get_memory("memory").unwrap();
 
@@ -276,15 +276,11 @@ pub fn i64f64_pow(store: &mut Store, instance: &Instance, base: i32, exponent: i
 
     // Allocate 16 bytes for the return value
     let ret_ptr = add_to_stack_pointer.call(store, -16).unwrap();
+    let mut new_args = vec![Value::I32(ret_ptr)];
+    new_args.extend(args);
 
-    // Call i64f64_pow with input values
-    let pow: TypedFunction<(i32, i32, i32), ()> = instance
-        .exports
-        .get_function("i64f64_pow")
-        .unwrap()
-        .typed(store)
-        .unwrap();
-    pow.call(store, ret_ptr, base, exponent).unwrap();
+    let func = instance.exports.get_function(fn_name).unwrap();
+    func.call(store, new_args.as_slice()).unwrap();
 
     let view = memory.view(store);
     let read_i32 = |ptr: i32| -> i32 {
@@ -296,54 +292,9 @@ pub fn i64f64_pow(store: &mut Store, instance: &Instance, base: i32, exponent: i
     let value = read_i32(ret_ptr);
     let is_error = read_i32(ret_ptr + 8);
     if is_error != 0 {
-        panic!("High bits are not zero");
+        return Err(Error::General);
     }
 
     add_to_stack_pointer.call(store, 16).unwrap();
-    value
-}
-
-pub fn from_num(store: &mut Store, instance: &Instance, n: i64) -> i32 {
-    // Setup the stack pointer
-    let add_to_stack_pointer: TypedFunction<i32, i32> = instance
-        .exports
-        .get_function("__wbindgen_add_to_stack_pointer")
-        .unwrap()
-        .typed(store)
-        .unwrap();
-
-    // Allocate 16 bytes for the return value
-    let retptr = add_to_stack_pointer.call(store, -16).unwrap();
-
-    // Call i64f64_from_num
-    let from_num: TypedFunction<(i32, i64), ()> = instance
-        .exports
-        .get_function("i64f64_from_num")
-        .unwrap()
-        .typed(store)
-        .unwrap();
-    from_num.call(store, retptr, n).unwrap();
-
-    // Get memory export and read results
-    let memory = instance.exports.get_memory("memory").unwrap();
-    let view = memory.view(store);
-    let read_i32 = |ptr: i32| -> i32 {
-        let mut bytes = [0u8; 4];
-        view.read(ptr as u64, &mut bytes).unwrap();
-        i32::from_le_bytes(bytes)
-    };
-
-    let r0 = read_i32(retptr);
-    let r1 = read_i32(retptr + 4);
-    let r2 = read_i32(retptr + 8);
-
-    // Clean up the stack
-    add_to_stack_pointer.call(store, 16).unwrap();
-
-    // Handle error case
-    if r2 != 0 {
-        panic!("Error converting number: {}", r1);
-    }
-
-    r0
+    Ok(value)
 }

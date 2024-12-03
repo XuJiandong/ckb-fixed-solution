@@ -1,0 +1,21 @@
+[package]
+name = "ckb-fixed-fuzzing"
+version = "1.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+ckb-fixed-tests = { path = ".." }
+once_cell = "1.0"
+
+[[bin]]
+name = "fuzz_fixed"
+path = "fuzz_targets/fuzz_fixed.rs"
+test = false
+doc = false
+bench = false
+

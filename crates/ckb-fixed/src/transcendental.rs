@@ -440,12 +440,6 @@ where
     sin(angle) / (T::from_num(1) + cos(angle))
 }
 
-/// arcsine function in radians
-//FIXME: only valid for very small angles
-pub fn asin<T>(angle: T) -> T {
-    angle
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -673,13 +667,5 @@ mod tests {
 
         let result: f64 = tan(ONE).lossy_into();
         assert_relative_eq!(result, 1.55741, epsilon = 1.0e-5);
-    }
-
-    #[test]
-    fn asin_works() {
-        let result: f64 = asin(I9F23::from_num(0)).lossy_into();
-        assert_relative_eq!(result, 0.0, epsilon = 1.0e-5);
-        let result: f64 = asin(I9F23::from_num(0.01)).lossy_into();
-        assert_relative_eq!(result, 0.01, epsilon = 1.0e-5);
     }
 }

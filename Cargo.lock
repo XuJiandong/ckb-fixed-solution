@@ -452,6 +452,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ckb-fixed-fuzzing"
+version = "1.0.0"
+dependencies = [
+ "ckb-fixed-tests",
+ "libfuzzer-sys",
+ "once_cell",
+]
+
+[[package]]
 name = "ckb-fixed-hash"
 version = "0.119.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1797,6 +1806,16 @@ name = "libc"
 version = "0.2.167"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09d6582e104315a817dff97f75133544b2e094ee22447d2acf4a74e189ba06fc"
+
+[[package]]
+name = "libfuzzer-sys"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b9569d2f74e257076d8c6bfa73fb505b46b851e51ddaecc825944aa3bed17fa"
+dependencies = [
+ "arbitrary",
+ "cc",
+]
 
 [[package]]
 name = "libloading"
