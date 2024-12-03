@@ -6,10 +6,9 @@ members = [
   # detect insertion point for newly generated crates.
   # @@INSERTION_POINT@@
   "tests",
-  "crates/ckb-fixed", "crates/ckb-fixed-tests",
+  "crates/ckb-fixed",
+  "crates/ckb-fixed-tests",
 ]
 
 [profile.release]
 overflow-checks = true
-strip = false
-codegen-units = 1

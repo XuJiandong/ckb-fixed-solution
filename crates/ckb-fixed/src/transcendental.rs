@@ -212,7 +212,7 @@ where
 
     let operand = D::from(operand);
     if operand < D::from_num(1) {
-        let inverse = D::from_num(1).checked_div(operand).unwrap();
+        let inverse = D::from_num(1).checked_div(operand).ok_or_else(|| ())?;
         return Ok(-log2_inner::<D, D>(inverse));
     };
     return Ok(log2_inner::<D, D>(operand));
@@ -438,12 +438,6 @@ where
 {
     angle *= T::from_num(2);
     sin(angle) / (T::from_num(1) + cos(angle))
-}
-
-/// arcsine function in radians
-//FIXME: only valid for very small angles
-pub fn asin<T>(angle: T) -> T {
-    angle
 }
 
 #[cfg(test)]
@@ -673,13 +667,5 @@ mod tests {
 
         let result: f64 = tan(ONE).lossy_into();
         assert_relative_eq!(result, 1.55741, epsilon = 1.0e-5);
-    }
-
-    #[test]
-    fn asin_works() {
-        let result: f64 = asin(I9F23::from_num(0)).lossy_into();
-        assert_relative_eq!(result, 0.0, epsilon = 1.0e-5);
-        let result: f64 = asin(I9F23::from_num(0.01)).lossy_into();
-        assert_relative_eq!(result, 0.01, epsilon = 1.0e-5);
     }
 }

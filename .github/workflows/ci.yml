@@ -1,0 +1,21 @@
+name: Rust
+
+on:
+  pull_request:
+
+jobs:
+  develop:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Prepare
+      run: make prepare
+    - name: Format
+      run: cargo fmt -- --check
+    - name: Build WASM
+      run: cd crates/ckb-fixed && make wasm-pack
+    - name: Tests
+      run: cargo test
+
