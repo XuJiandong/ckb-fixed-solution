@@ -7,8 +7,32 @@ use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
 static WASMER: Lazy<Mutex<(Store, Instance)>> = Lazy::new(|| Mutex::new(initialize_wasmer()));
+static mut COUNT: u32 = 0;
+
+fn get_count() -> u32 {
+    unsafe { COUNT }
+}
+
+fn tick_count() {
+    unsafe {
+        COUNT += 1;
+    }
+}
+fn reset_count() {
+    unsafe {
+        COUNT = 0;
+    }
+}
 
 fuzz_target!(|data: &[u8]| {
+    tick_count();
+    // wasmer became unstable when called too many times.
+    if get_count() > 1000 {
+        let (new_store, new_instance) = initialize_wasmer();
+        let mut wasmer_guard = WASMER.lock().unwrap();
+        *wasmer_guard = (new_store, new_instance);
+        reset_count();
+    }
     let (store, instance) = &mut *WASMER.lock().unwrap();
 
     if data.len() == 16 {
