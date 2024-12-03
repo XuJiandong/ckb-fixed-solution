@@ -1,5 +1,11 @@
-
 ### How to run
+
+Basic fuzzing command:
+```bash
+make fuzzing
 ```
-cargo fuzz run fuzz_fixed -j $(nproc)
+
+To continue fuzzing even when crashes are detected:
+```bash
+make fuzzing-ignore-crashes
 ```

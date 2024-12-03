@@ -99,7 +99,7 @@ pub fn to_le_bytes(store: &mut Store, instance: &Instance, ptr: i32) -> Vec<u8> 
     // Free the allocated memory
     let free: TypedFunction<(i32, i32, i32), ()> = instance
         .exports
-        .get_function("__wbindgen_export_2")
+        .get_function("__wbindgen_free")
         .unwrap()
         .typed(store)
         .unwrap();
@@ -129,7 +129,7 @@ pub fn new(store: &mut Store, instance: &Instance, inner: &[u8]) -> Result<i32, 
     // Allocate memory for the input array and copy the bytes
     let malloc: TypedFunction<(i32, i32), i32> = instance
         .exports
-        .get_function("__wbindgen_export_0")
+        .get_function("__wbindgen_malloc")
         .unwrap()
         .typed(store)
         .unwrap();
@@ -193,7 +193,7 @@ pub fn from_str(store: &mut Store, instance: &Instance, s: &str) -> Result<i32, 
     // Allocate memory for the input string and copy the bytes
     let malloc: TypedFunction<(i32, i32), i32> = instance
         .exports
-        .get_function("__wbindgen_export_0")
+        .get_function("__wbindgen_malloc")
         .unwrap()
         .typed(store)
         .unwrap();

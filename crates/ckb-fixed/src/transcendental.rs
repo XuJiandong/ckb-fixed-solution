@@ -212,7 +212,7 @@ where
 
     let operand = D::from(operand);
     if operand < D::from_num(1) {
-        let inverse = D::from_num(1).checked_div(operand).unwrap();
+        let inverse = D::from_num(1).checked_div(operand).ok_or_else(|| ())?;
         return Ok(-log2_inner::<D, D>(inverse));
     };
     return Ok(log2_inner::<D, D>(operand));
