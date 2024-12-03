@@ -76,3 +76,20 @@ fn test_native_return_error() {
     let result = a.ln();
     assert!(result.is_err());
 }
+
+// test cases from fuzzing
+#[test]
+#[should_panic]
+fn test_fuzzing() {
+    let bytes = [
+        2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ];
+    let (mut store, instance) = initialize_wasmer();
+    let wasm_value = new(&mut store, &instance, &bytes).unwrap();
+    let result = i64f64_ln(&mut store, &instance, wasm_value);
+    assert!(result.is_err());
+
+    let rust_value = ckb_fixed::I64F64::new(&bytes).unwrap();
+    let rust_result = rust_value.ln();
+    assert!(rust_result.is_err());
+}
