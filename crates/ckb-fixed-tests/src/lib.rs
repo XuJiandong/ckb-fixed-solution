@@ -48,8 +48,7 @@ pub fn i64f64_add(store: &mut Store, instance: &Instance, a: i32, b: i32) -> i32
         .unwrap()
         .typed(store)
         .unwrap();
-    let result = add.call(store, a, b).unwrap();
-    result
+    add.call(store, a, b).unwrap()
 }
 
 pub fn i64f64_ln(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {

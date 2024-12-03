@@ -1,4 +1,4 @@
-// from https://github.com/encointer/substrate-fixed/blob/master/src/transcendental.rs
+// modifed from https://github.com/encointer/substrate-fixed/blob/master/src/transcendental.rs
 
 //  Copyright (c) 2019 Alain Brenzikofer
 //
@@ -119,6 +119,17 @@ const ARCTAN_ANGLES: [U0F128; 64] = [
     U0F128::from_bits(0x00000000000000020000000000000000),
 ];
 
+#[derive(Debug)]
+pub enum Error {
+    General,
+    SqrtOnNegative,
+    SqrtOverflowInverting,
+    LogOnNegative,
+    LogOverflow,
+    ExpOverflow,
+    PowOverflow,
+}
+
 /// right-shift with rounding
 fn rs<T>(operand: T) -> T
 where
@@ -131,14 +142,14 @@ where
 }
 
 /// square root
-pub fn sqrt<S, D>(operand: S) -> Result<D, &'static str>
+pub fn sqrt<S, D>(operand: S) -> Result<D, Error>
 where
     S: Fixed + PartialOrd<ConstType>,
     D: Fixed + PartialOrd<ConstType> + From<S>,
 {
     let mut invert = false;
     if operand < ZERO {
-        return Err("Can't calculate sqrt from negative numbers.");
+        return Err(Error::SqrtOnNegative);
     };
 
     let mut operand = D::from(operand);
@@ -150,7 +161,7 @@ where
         operand = if let Some(r) = D::from_num(1).checked_div(operand) {
             r
         } else {
-            return Err("Overflow inverting operand.");
+            return Err(Error::SqrtOverflowInverting);
         };
     }
     // Newton iterations
@@ -162,7 +173,7 @@ where
         l = if let Some(r) = D::from_num(1).checked_div(l) {
             r
         } else {
-            return Err("Overflow un-inverting operand.");
+            return Err(Error::SqrtOverflowInverting);
         };
     }
     Ok(l)
@@ -200,26 +211,28 @@ where
 }
 
 /// base 2 logarithm
-pub fn log2<S, D>(operand: S) -> Result<D, ()>
+pub fn log2<S, D>(operand: S) -> Result<D, Error>
 where
     S: FixedSigned + PartialOrd<ConstType>,
     D: FixedSigned + PartialOrd<ConstType> + From<S>,
     D::Bits: Copy + ToFixed + AddAssign + BitOrAssign + ShlAssign,
 {
     if operand <= S::from_num(0) {
-        return Err(());
+        return Err(Error::LogOnNegative);
     };
 
     let operand = D::from(operand);
     if operand < D::from_num(1) {
-        let inverse = D::from_num(1).checked_div(operand).ok_or_else(|| ())?;
+        let inverse = D::from_num(1)
+            .checked_div(operand)
+            .ok_or(Error::LogOverflow)?;
         return Ok(-log2_inner::<D, D>(inverse));
     };
-    return Ok(log2_inner::<D, D>(operand));
+    Ok(log2_inner::<D, D>(operand))
 }
 
 /// natural logarithm
-pub fn ln<S, D>(operand: S) -> Result<D, ()>
+pub fn ln<S, D>(operand: S) -> Result<D, Error>
 where
     S: FixedSigned + PartialOrd<ConstType>,
     D: FixedSigned + PartialOrd<ConstType> + From<S> + From<ConstType>,
@@ -229,7 +242,7 @@ where
 }
 
 /// exponential function e^(operand)
-pub fn exp<S, D>(mut operand: S) -> Result<D, ()>
+pub fn exp<S, D>(mut operand: S) -> Result<D, Error>
 where
     S: FixedSigned + PartialOrd<ConstType>,
     D: FixedSigned + PartialOrd<ConstType> + From<S> + From<ConstType>,
@@ -253,44 +266,37 @@ where
         term = if let Some(r) = term.checked_mul(operand) {
             r
         } else {
-            return Err(());
+            return Err(Error::ExpOverflow);
         };
-        //let bits = if let Some(r) = D::from_num(i)
-        //    { r } else { return Err(()) };
         term = if let Some(r) = term.checked_div(D::from_num(i)) {
             r
         } else {
-            return Err(());
+            return Err(Error::ExpOverflow);
         };
 
         result = if let Some(r) = result.checked_add(term) {
             r
         } else {
-            return Err(());
+            return Err(Error::ExpOverflow);
         };
-        //if term < 500 && (i > 15 || term < $ty(20i32).unwrap()) {
-        //    break;
-        //};
     }
     if neg {
         result = if let Some(r) = D::from_num(1).checked_div(result) {
             r
         } else {
-            return Err(());
+            return Err(Error::ExpOverflow);
         };
     }
     Ok(result)
 }
 
 /// power
-pub fn pow<S, D>(operand: S, exponent: S) -> Result<D, ()>
+pub fn pow<S, D>(operand: S, exponent: S) -> Result<D, Error>
 where
     S: FixedSigned + PartialOrd<ConstType>,
     D: FixedSigned + PartialOrd<ConstType> + From<S> + From<ConstType>,
     D::Bits: Copy + ToFixed + AddAssign + BitOrAssign + ShlAssign,
 {
-    // TODO: dynamic typing depending on input
-    //type I = FixedI128<U64>; // internal
     if operand == S::from_num(0) {
         return Ok(D::from_num(0));
     };
@@ -304,22 +310,22 @@ where
     let r = if let Some(r) = ln::<S, D>(operand)?.checked_mul(exponent.into()) {
         r
     } else {
-        return Err(());
+        return Err(Error::PowOverflow);
     };
     let result: D = if let Ok(r) = exp(r) {
         r
     } else {
-        return Err(());
+        return Err(Error::PowOverflow);
     };
     let (result, oflw) = result.overflowing_to_num::<D>();
     if oflw {
-        return Err(());
+        return Err(Error::PowOverflow);
     };
     Ok(result)
 }
 
 /// power with integer exponend
-pub fn powi<S, D>(operand: S, exponent: i32) -> Result<D, ()>
+pub fn powi<S, D>(operand: S, exponent: i32) -> Result<D, Error>
 where
     S: Fixed + PartialOrd<ConstType>,
     D: Fixed + PartialOrd<ConstType> + From<S> + From<ConstType>,
@@ -341,14 +347,14 @@ where
         r = if let Some(r) = r.checked_mul(operand) {
             r
         } else {
-            return Err(());
+            return Err(Error::PowOverflow);
         };
     }
     if exponent < 0 {
         r = if let Some(r) = D::from_num(1).checked_div(r) {
             r
         } else {
-            return Err(());
+            return Err(Error::PowOverflow);
         };
     }
     Ok(r)
@@ -484,7 +490,7 @@ mod tests {
 
         // slightly below lower bound that produces an overflow
         let res = sqrt::<S, D>(S::from_num(5.8205e-10));
-        assert_eq!(res.unwrap_err(), "Overflow inverting operand.")
+        assert!(matches!(res.unwrap_err(), Error::SqrtOverflowInverting));
     }
 
     #[test]

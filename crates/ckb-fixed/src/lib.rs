@@ -1,4 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::should_implement_trait)]
 
 extern crate alloc;
 
