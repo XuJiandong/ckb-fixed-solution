@@ -1,3 +1,5 @@
+[workspace]
+
 [package]
 name = "ckb-fixed-fuzzing"
 version = "1.0.0"
@@ -19,3 +21,9 @@ test = false
 doc = false
 bench = false
 
+[profile.release]
+overflow-checks = true
+strip = false
+
+[profile.dev]
+debug = true
