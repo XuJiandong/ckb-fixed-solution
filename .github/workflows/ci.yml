@@ -12,10 +12,10 @@ jobs:
         submodules: true
     - name: Prepare
       run: make prepare
-    - name: Format
-      run: cargo fmt -- --check
     - name: Build WASM
       run: cd crates/ckb-fixed && make wasm-pack
+    - name: Clippy & Format
+      run: cargo clippy && cargo fmt -- --check
     - name: Tests
       run: cargo test
 
