@@ -9,11 +9,11 @@ description = "A fixed-point ultility library on CKB."
 crate-type = ["cdylib", "rlib"]
 
 [features]
-std = ["fixed/std"]
+std = ["fixed/std", "wasm-bindgen"]
 
 [dependencies]
 fixed = "1.28.0"
-wasm-bindgen = { version = "0.2.95" }
+wasm-bindgen = { version = "0.2.95", optional = true }
 
 
 [dev-dependencies]

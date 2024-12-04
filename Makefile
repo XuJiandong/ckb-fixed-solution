@@ -48,9 +48,6 @@ build:
 		for contract in $(wildcard contracts/*); do \
 			$(MAKE) -e -C $$contract build; \
 		done; \
-		for crate in $(wildcard crates/*); do \
-			cargo build -p $$(basename $$crate) $(MODE_ARGS) $(CARGO_ARGS); \
-		done; \
 		for sim in $(wildcard native-simulators/*); do \
 			cargo build -p $$(basename $$sim) $(CARGO_ARGS); \
 		done; \
