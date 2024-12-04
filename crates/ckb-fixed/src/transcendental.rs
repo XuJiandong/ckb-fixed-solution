@@ -128,6 +128,7 @@ pub enum Error {
     LogOverflow,
     ExpOverflow,
     PowOverflow,
+    SinOverflow,
 }
 
 /// right-shift with rounding
@@ -255,11 +256,15 @@ where
     };
     let neg = operand < ZERO;
     if neg {
-        operand = -operand;
+        operand = operand.checked_neg().ok_or(Error::ExpOverflow)?;
     };
 
     let operand = D::from(operand);
-    let mut result = operand + D::from_num(1);
+    let mut result = if let Some(r) = operand.checked_add(D::from_num(1)) {
+        r
+    } else {
+        return Err(Error::ExpOverflow);
+    };
     let mut term = operand;
 
     for i in 2..D::FRAC_NBITS {
@@ -388,7 +393,7 @@ where
 }
 
 /// sine function in radians
-pub fn sin<T>(mut angle: T) -> T
+pub fn sin<T>(mut angle: T) -> Result<T, Error>
 where
     T: FixedSigned
         + PartialOrd<ConstType>
@@ -396,6 +401,13 @@ where
         + LossyFrom<I9F23>
         + LossyFrom<U0F128>,
 {
+    if angle > TWO_PI || angle < -TWO_PI {
+        let multiple = angle / T::lossy_from(TWO_PI);
+        let multiple = multiple.floor();
+        angle -= multiple
+            .checked_mul(T::lossy_from(TWO_PI))
+            .ok_or(Error::SinOverflow)?;
+    }
     //wraparound
     while angle > PI {
         angle -= T::lossy_from(TWO_PI);
@@ -418,11 +430,11 @@ where
     let x = T::lossy_from(U0F128::from_bits(0x9B74EDA8A01E20000000000000000000));
     //let x = T::from_num(1);
     let (_x, y) = cordic_rotation(x, T::from_num(0), angle);
-    y
+    Ok(y)
 }
 
 /// cosine function in radians
-pub fn cos<T>(angle: T) -> T
+pub fn cos<T>(angle: T) -> Result<T, Error>
 where
     T: FixedSigned
         + PartialOrd<ConstType>
@@ -434,7 +446,7 @@ where
 }
 
 /// tangent function in radians
-pub fn tan<T>(mut angle: T) -> T
+pub fn tan<T>(mut angle: T) -> Result<T, Error>
 where
     T: FixedSigned
         + PartialOrd<ConstType>
@@ -443,7 +455,7 @@ where
         + LossyFrom<U0F128>,
 {
     angle *= T::from_num(2);
-    sin(angle) / (T::from_num(1) + cos(angle))
+    Ok(sin(angle)? / (T::from_num(1) + cos(angle)?))
 }
 
 #[cfg(test)]
@@ -630,48 +642,48 @@ mod tests {
     #[test]
     fn sin_works() {
         // for correction factor reference
-        let result: f64 = sin(I32F32::lossy_from(FRAC_PI_2)).lossy_into();
+        let result: f64 = sin(I32F32::lossy_from(FRAC_PI_2)).unwrap().lossy_into();
         assert_relative_eq!(result, 1.0, epsilon = 1.0e-5);
 
-        let result: f64 = sin(FRAC_PI_2).lossy_into();
+        let result: f64 = sin(FRAC_PI_2).unwrap().lossy_into();
         assert_relative_eq!(result, 1.0, epsilon = 1.0e-5);
 
-        let result: f64 = sin(I32F32::from_num(0)).lossy_into();
+        let result: f64 = sin(I32F32::from_num(0)).unwrap().lossy_into();
         assert_relative_eq!(result, 0.0, epsilon = 1.0e-5);
-        let result: f64 = sin(I9F23::from_num(0)).lossy_into();
+        let result: f64 = sin(I9F23::from_num(0)).unwrap().lossy_into();
         assert_relative_eq!(result, 0.0, epsilon = 1.0e-5);
-        let result: f64 = sin(PI).lossy_into();
+        let result: f64 = sin(PI).unwrap().lossy_into();
         assert_relative_eq!(result, 0.0, epsilon = 1.0e-5);
-        let result: f64 = sin(PI + FRAC_PI_2).lossy_into();
+        let result: f64 = sin(PI + FRAC_PI_2).unwrap().lossy_into();
         assert_relative_eq!(result, -1.0, epsilon = 1.0e-5);
-        let result: f64 = sin(TWO_PI).lossy_into();
+        let result: f64 = sin(TWO_PI).unwrap().lossy_into();
         assert_relative_eq!(result, 0.0, epsilon = 1.0e-5);
-        let result: f64 = sin(FRAC_PI_4).lossy_into();
+        let result: f64 = sin(FRAC_PI_4).unwrap().lossy_into();
         assert_relative_eq!(result, 0.707107, epsilon = 1.0e-1);
-        let result: f64 = sin(-FRAC_PI_2).lossy_into();
+        let result: f64 = sin(-FRAC_PI_2).unwrap().lossy_into();
         assert_relative_eq!(result, -1.0, epsilon = 1.0e-1);
-        let result: f64 = sin(-FRAC_PI_4).lossy_into();
+        let result: f64 = sin(-FRAC_PI_4).unwrap().lossy_into();
         assert_relative_eq!(result, -0.707107, epsilon = 1.0e-1);
-        let result: f64 = sin(PI + FRAC_PI_4).lossy_into();
+        let result: f64 = sin(PI + FRAC_PI_4).unwrap().lossy_into();
         assert_relative_eq!(result, -0.707107, epsilon = 1.0e-1);
-        let result: f64 = sin(TWO).lossy_into();
+        let result: f64 = sin(TWO).unwrap().lossy_into();
         assert_relative_eq!(result, 0.909297, epsilon = 1.0e-5);
-        let result: f64 = sin(-TWO).lossy_into();
+        let result: f64 = sin(-TWO).unwrap().lossy_into();
         assert_relative_eq!(result, -0.909297, epsilon = 1.0e-5);
     }
 
     #[test]
     fn cos_works() {
-        let result: f64 = cos(I9F23::from_num(0)).lossy_into();
+        let result: f64 = cos(I9F23::from_num(0)).unwrap().lossy_into();
         assert_relative_eq!(result, 1.0, epsilon = 1.0e-5);
     }
 
     #[test]
     fn tan_works() {
-        let result: f64 = tan(I9F23::from_num(0)).lossy_into();
+        let result: f64 = tan(I9F23::from_num(0)).unwrap().lossy_into();
         assert_relative_eq!(result, 0.0, epsilon = 1.0e-5);
 
-        let result: f64 = tan(ONE).lossy_into();
+        let result: f64 = tan(ONE).unwrap().lossy_into();
         assert_relative_eq!(result, 1.55741, epsilon = 1.0e-5);
     }
 }

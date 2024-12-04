@@ -21,6 +21,14 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "fuzz_native_fixed"
+path = "fuzz_targets/fuzz_native_fixed.rs"
+test = false
+doc = false
+bench = false
+
+
 [profile.release]
 overflow-checks = true
 strip = false
