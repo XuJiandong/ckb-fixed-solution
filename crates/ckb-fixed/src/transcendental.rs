@@ -401,14 +401,7 @@ where
         + LossyFrom<I9F23>
         + LossyFrom<U0F128>,
 {
-    if angle > TWO_PI {
-        let multiple = angle / T::lossy_from(TWO_PI);
-        let multiple = multiple.floor();
-        angle -= multiple
-            .checked_mul(T::lossy_from(TWO_PI))
-            .ok_or(Error::SinOverflow)?;
-    }
-    if angle < -TWO_PI {
+    if angle > TWO_PI || angle < -TWO_PI {
         let multiple = angle / T::lossy_from(TWO_PI);
         let multiple = multiple.floor();
         angle -= multiple
