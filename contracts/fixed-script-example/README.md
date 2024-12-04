@@ -1,7 +1,3 @@
 # fixed-script-example
-
-TODO: Write this readme
-
-*This contract was bootstrapped with [ckb-script-templates].*
-
-[ckb-script-templates]: https://github.com/cryptape/ckb-script-templates
+A demonstration project showing how to use `ckb-fixed` for on-chain fixed-point
+arithmetic operations in CKB on-chain scripts.

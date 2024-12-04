@@ -1,9 +1,43 @@
 # ckb-fixed-solution
+When developing on-chain scripts for CKB, numeric calculations are often required.
+Some developers prefer using [fixed-point arithmetic](https://en.wikipedia.org/wiki/Fixed-point_arithmetic)
+due to its simplicity. To ensure consistent calculations between on-chain scripts
+and off-chain applications, we provide a solution based on WASM and Rust.
 
+This solution consists of two parts:
+1. A Rust library ([ckb-fixed](./crates/ckb-fixed)) for on-chain scripts. It is based on [fixed](https://crates.io/crates/fixed).
+2. WASM bindings of the same Rust library for off-chain applications, generated using `wasm-pack`
 
+This approach ensures identical numerical behavior across both environments.
 
+## How to Integrate
 
+### Prerequisites
+Install required tools:
+```bash
+# Install wasm-pack for WASM bindings generation
+cargo install wasm-pack --version 0.13.1
 
+# Add WebAssembly target to Rust
+rustup target add wasm32-unknown-unknown
+```
+
+### For Off-chain Applications (JavaScript/WASM)
+Generate WASM bindings:
+```bash
+cd crates/ckb-fixed
+make wasm-pack
+```
+The generated WASM bindings will be available in the `pkg` directory. For usage instructions, refer to the [wasm-pack documentation](https://rustwasm.github.io/docs/wasm-pack/).
+
+### For On-chain Scripts (Rust)
+Add the dependency to your `Cargo.toml`:
+```toml
+[dependencies]
+ckb-fixed = "1.0.0"
+```
+
+For implementation examples, see our [on-chain script example](./contracts/fixed-script-example).
 
 ## Bugs found by Fuzzing
 We've implemented [fuzzing](./crates/ckb-fixed-tests/fuzz) for the ckb-fixed
