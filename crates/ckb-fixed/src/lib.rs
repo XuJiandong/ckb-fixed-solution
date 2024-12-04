@@ -75,6 +75,18 @@ impl From<types::I64F64> for I64F64 {
 // bindings to fixed crate
 #[cfg_attr(feature = "wasm-bindgen", wasm_bindgen)]
 impl I64F64 {
+    #[cfg(feature = "wasm-bindgen")]
+    #[wasm_bindgen(js_name = toJSON)]
+    /// Convert the `I64F64` to a JSON string.
+    pub fn to_json(&self) -> String {
+        self.inner.to_string()
+    }
+    #[cfg(feature = "wasm-bindgen")]
+    #[wasm_bindgen(js_name = toString)]
+    /// Convert the `I64F64` to a string.
+    pub fn to_string(&self) -> String {
+        self.inner.to_string()
+    }
     /// Create a new `I64F64` from a byte slice.
     pub fn new(inner: &[u8]) -> Result<Self, FixedError> {
         let inner =
