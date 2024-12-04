@@ -94,16 +94,19 @@ impl I64F64 {
         Ok(Self { inner })
     }
     /// Create a new `I64F64` from a string.
+    #[cfg_attr(feature = "wasm-bindgen", wasm_bindgen(js_name = fromStr))]
     pub fn from_str(s: &str) -> Result<I64F64, FixedError> {
         let inner = types::I64F64::from_str(s).map_err(|_| FixedError::InvalidNumber)?;
         Ok(I64F64 { inner })
     }
     /// Create a new `I64F64` from an integer.
+    #[cfg_attr(feature = "wasm-bindgen", wasm_bindgen(js_name = fromNum))]
     pub fn from_num(n: i64) -> Result<I64F64, FixedError> {
         let inner = types::I64F64::from_num(n);
         Ok(I64F64 { inner })
     }
     /// Convert the `I64F64` to a byte slice.
+    #[cfg_attr(feature = "wasm-bindgen", wasm_bindgen(js_name = toLeBytes))]
     pub fn to_le_bytes(&self) -> Vec<u8> {
         self.inner.to_le_bytes().to_vec()
     }

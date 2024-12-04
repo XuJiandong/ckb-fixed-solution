@@ -89,10 +89,10 @@ pub fn to_le_bytes(store: &mut Store, instance: &Instance, ptr: i32) -> Vec<u8> 
     // Allocate 16 bytes for the return value
     let ret_ptr = add_to_stack_pointer.call(store, -16).unwrap();
 
-    // Call i64f64_to_le_bytes
+    // Call i64f64_toLeBytes
     let to_le_bytes: TypedFunction<(i32, i32), ()> = instance
         .exports
-        .get_function("i64f64_to_le_bytes")
+        .get_function("i64f64_toLeBytes")
         .unwrap()
         .typed(store)
         .unwrap();
@@ -223,10 +223,10 @@ pub fn from_str(store: &mut Store, instance: &Instance, s: &str) -> Result<i32, 
         view.write(ptr0 as u64, s.as_bytes()).unwrap();
     }
 
-    // Call i64f64_from_str
+    // Call i64f64_fromStr
     let from_str: TypedFunction<(i32, i32, i32), ()> = instance
         .exports
-        .get_function("i64f64_from_str")
+        .get_function("i64f64_fromStr")
         .unwrap()
         .typed(store)
         .unwrap();
@@ -286,7 +286,7 @@ pub fn i64f64_powi(
 }
 
 pub fn from_num(store: &mut Store, instance: &Instance, n: i64) -> Result<i32, Error> {
-    call_with_result(store, instance, "i64f64_from_num", vec![Value::I64(n)])
+    call_with_result(store, instance, "i64f64_fromNum", vec![Value::I64(n)])
         .map_err(|_| Error::FromNum)
 }
 
