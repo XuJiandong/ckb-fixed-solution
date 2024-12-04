@@ -48,9 +48,6 @@ build:
 		for contract in $(wildcard contracts/*); do \
 			$(MAKE) -e -C $$contract build; \
 		done; \
-		for crate in $(wildcard crates/*); do \
-			cargo build -p $$(basename $$crate) $(MODE_ARGS) $(CARGO_ARGS); \
-		done; \
 		for sim in $(wildcard native-simulators/*); do \
 			cargo build -p $$(basename $$sim) $(CARGO_ARGS); \
 		done; \
@@ -135,6 +132,7 @@ prepare:
 	rustup target add riscv64imac-unknown-none-elf
 	rustup target add wasm32-unknown-unknown
 	cargo install wasm-pack --version 0.13.1
+	wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && sudo ./llvm.sh 18
 
 # Generate checksum info for reproducible build
 CHECKSUM_FILE := build/checksums-$(MODE).txt

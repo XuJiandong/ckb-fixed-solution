@@ -16,6 +16,8 @@ jobs:
       run: cd crates/ckb-fixed && make wasm-pack
     - name: Clippy & Format
       run: cargo clippy && cargo fmt -- --check
+    - name: Build Example
+      run: make build
     - name: Tests
       run: cargo test
 

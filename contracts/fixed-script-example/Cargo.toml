@@ -1,0 +1,11 @@
+[package]
+name = "fixed-script-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ckb-std = "0.16.3"
+ckb-fixed = { path = "../../crates/ckb-fixed" }
+
+[features]
+native-simulator = ["ckb-std/native-simulator"]

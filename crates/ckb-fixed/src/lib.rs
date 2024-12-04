@@ -6,6 +6,7 @@ extern crate alloc;
 pub mod transcendental;
 use alloc::vec::Vec;
 pub use fixed::types;
+#[cfg(feature = "wasm-bindgen")]
 use wasm_bindgen::prelude::*;
 
 #[derive(Debug)]
@@ -15,6 +16,7 @@ pub enum FixedError {
     Calculation(&'static str),
 }
 
+#[cfg(feature = "wasm-bindgen")]
 impl From<FixedError> for JsValue {
     fn from(error: FixedError) -> JsValue {
         match error {
@@ -25,14 +27,14 @@ impl From<FixedError> for JsValue {
     }
 }
 
-#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "wasm-bindgen", wasm_bindgen)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct I64F64 {
     inner: types::I64F64,
 }
 
 // bindings to fixed crate
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm-bindgen", wasm_bindgen)]
 impl I64F64 {
     pub fn new(inner: &[u8]) -> Result<Self, FixedError> {
         let inner =
@@ -92,10 +94,25 @@ impl I64F64 {
         let inner = a.round();
         I64F64 { inner }
     }
+    pub fn eq(&self, b: &I64F64) -> bool {
+        self.inner == b.inner
+    }
+    pub fn lt(&self, b: &I64F64) -> bool {
+        self.inner < b.inner
+    }
+    pub fn gt(&self, b: &I64F64) -> bool {
+        self.inner > b.inner
+    }
+    pub fn le(&self, b: &I64F64) -> bool {
+        self.inner <= b.inner
+    }
+    pub fn ge(&self, b: &I64F64) -> bool {
+        self.inner >= b.inner
+    }
 }
 
 // bindings to transcendental module
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm-bindgen", wasm_bindgen)]
 impl I64F64 {
     pub fn sin(&self) -> I64F64 {
         let a = self.inner;
