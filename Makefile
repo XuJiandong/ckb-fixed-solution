@@ -132,6 +132,7 @@ prepare:
 	rustup target add riscv64imac-unknown-none-elf
 	rustup target add wasm32-unknown-unknown
 	cargo install wasm-pack --version 0.13.1
+	wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && sudo ./llvm.sh 19
 
 # Generate checksum info for reproducible build
 CHECKSUM_FILE := build/checksums-$(MODE).txt
