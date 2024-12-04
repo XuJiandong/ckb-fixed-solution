@@ -114,16 +114,6 @@ impl I64F64 {
 // bindings to transcendental module
 #[cfg_attr(feature = "wasm-bindgen", wasm_bindgen)]
 impl I64F64 {
-    pub fn sin(&self) -> I64F64 {
-        let a = self.inner;
-        let inner = transcendental::sin(a);
-        I64F64 { inner }
-    }
-    pub fn cos(&self) -> I64F64 {
-        let a = self.inner;
-        let inner = transcendental::cos(a);
-        I64F64 { inner }
-    }
     pub fn exp(&self) -> Result<Self, FixedError> {
         let a = self.inner;
         let inner = transcendental::exp(a)
@@ -143,11 +133,6 @@ impl I64F64 {
             .map_err(|_| FixedError::Calculation("pow calculation failed"))?;
         Ok(Self { inner })
     }
-    pub fn tan(&self) -> I64F64 {
-        let a = self.inner;
-        let inner = transcendental::tan(a);
-        I64F64 { inner }
-    }
     pub fn sqrt(&self) -> Result<Self, FixedError> {
         let a = self.inner;
         let inner = transcendental::sqrt(a)
@@ -164,6 +149,24 @@ impl I64F64 {
         let a = self.inner;
         let inner = transcendental::powi(a, n)
             .map_err(|_| FixedError::Calculation("powi calculation failed"))?;
+        Ok(Self { inner })
+    }
+    pub fn sin(&self) -> Result<Self, FixedError> {
+        let a = self.inner;
+        let inner = transcendental::sin(a)
+            .map_err(|_| FixedError::Calculation("sin calculation failed"))?;
+        Ok(Self { inner })
+    }
+    pub fn cos(&self) -> Result<Self, FixedError> {
+        let a = self.inner;
+        let inner = transcendental::cos(a)
+            .map_err(|_| FixedError::Calculation("cos calculation failed"))?;
+        Ok(Self { inner })
+    }
+    pub fn tan(&self) -> Result<Self, FixedError> {
+        let a = self.inner;
+        let inner = transcendental::tan(a)
+            .map_err(|_| FixedError::Calculation("tan calculation failed"))?;
         Ok(Self { inner })
     }
 }

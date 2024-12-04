@@ -1,5 +1,6 @@
 use crate::{
-    from_num, from_str, i64f64_add, i64f64_ln, i64f64_pow, initialize_wasmer, new, to_le_bytes,
+    from_num, from_str, i64f64_add, i64f64_exp, i64f64_ln, i64f64_pow, i64f64_sin,
+    initialize_wasmer, new, to_le_bytes,
 };
 
 #[test]
@@ -91,4 +92,52 @@ fn test_fuzzing() {
     let rust_value = ckb_fixed::I64F64::new(&bytes).unwrap();
     let rust_result = rust_value.ln();
     assert!(rust_result.is_err());
+}
+
+#[test]
+fn test_fuzzing_2() {
+    let bytes = [
+        0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x80,
+    ];
+    let (mut store, instance) = initialize_wasmer();
+    let wasm_value = new(&mut store, &instance, &bytes).unwrap();
+    let result = i64f64_exp(&mut store, &instance, wasm_value);
+    assert!(result.is_err());
+
+    let rust_value = ckb_fixed::I64F64::new(&bytes).unwrap();
+    let rust_result = rust_value.exp();
+    assert!(rust_result.is_err());
+}
+
+#[test]
+fn test_fuzzing_3() {
+    let bytes = [
+        0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x80,
+    ];
+    let rust_value = ckb_fixed::I64F64::new(&bytes).unwrap();
+    let rust_result = rust_value.sin();
+    assert!(rust_result.is_err());
+
+    let (mut store, instance) = initialize_wasmer();
+    let wasm_value = new(&mut store, &instance, &bytes).unwrap();
+    let result = i64f64_sin(&mut store, &instance, wasm_value);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_fuzzing_4() {
+    let bytes = [
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x80,
+    ];
+    let rust_value = ckb_fixed::I64F64::new(&bytes).unwrap();
+    let rust_result = rust_value.exp();
+    assert!(rust_result.is_err());
+
+    let (mut store, instance) = initialize_wasmer();
+    let wasm_value = new(&mut store, &instance, &bytes).unwrap();
+    let result = i64f64_exp(&mut store, &instance, wasm_value);
+    assert!(result.is_err());
 }

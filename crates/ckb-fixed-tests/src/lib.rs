@@ -13,6 +13,9 @@ pub enum Error {
     FromNum,
     FromStr,
     New,
+    Log2,
+    Sin,
+    Sqrt,
 }
 
 pub fn initialize_wasmer() -> (Store, Instance) {
@@ -53,6 +56,22 @@ pub fn i64f64_add(store: &mut Store, instance: &Instance, a: i32, b: i32) -> i32
 
 pub fn i64f64_ln(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {
     call_with_result(store, instance, "i64f64_ln", vec![Value::I32(a)]).map_err(|_| Error::Ln)
+}
+
+pub fn i64f64_exp(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {
+    call_with_result(store, instance, "i64f64_exp", vec![Value::I32(a)]).map_err(|_| Error::Exp)
+}
+
+pub fn i64f64_log2(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {
+    call_with_result(store, instance, "i64f64_log2", vec![Value::I32(a)]).map_err(|_| Error::Log2)
+}
+
+pub fn i64f64_sin(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {
+    call_with_result(store, instance, "i64f64_sin", vec![Value::I32(a)]).map_err(|_| Error::Sin)
+}
+
+pub fn i64f64_sqrt(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {
+    call_with_result(store, instance, "i64f64_sqrt", vec![Value::I32(a)]).map_err(|_| Error::Sqrt)
 }
 
 pub fn to_le_bytes(store: &mut Store, instance: &Instance, ptr: i32) -> Vec<u8> {
@@ -247,6 +266,21 @@ pub fn i64f64_pow(
         instance,
         "i64f64_pow",
         vec![Value::I32(base), Value::I32(exponent)],
+    )
+    .map_err(|_| Error::Pow)
+}
+
+pub fn i64f64_powi(
+    store: &mut Store,
+    instance: &Instance,
+    base: i32,
+    exponent: i64,
+) -> Result<i32, Error> {
+    call_with_result(
+        store,
+        instance,
+        "i64f64_powi",
+        vec![Value::I32(base), Value::I64(exponent)],
     )
     .map_err(|_| Error::Pow)
 }
