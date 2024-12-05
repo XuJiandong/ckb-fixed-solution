@@ -5,6 +5,10 @@ edition = "2021"
 license = "MIT"
 description = "A fixed-point ultility library on CKB."
 repository = "https://github.com/XuJiandong/ckb-fixed-solution"
+authors = ["Lyndon <lynndon@gmail.com>"]
+keywords = ["fixed-point", "ckb", "wasm"]
+categories = ["mathematics", "cryptography::cryptocurrencies", "no-std"]
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
