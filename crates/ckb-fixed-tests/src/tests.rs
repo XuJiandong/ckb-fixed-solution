@@ -9,7 +9,7 @@ fn test_basic() {
 
     let value = from_num(&mut store, &instance, 42).unwrap();
     let value2 = from_num(&mut store, &instance, 1).unwrap();
-    let result = i64f64_add(&mut store, &instance, value, value2);
+    let result = i64f64_add(&mut store, &instance, value, value2).unwrap();
     let rust_value = ckb_fixed::I64F64::from_num(43).unwrap();
 
     assert_eq!(

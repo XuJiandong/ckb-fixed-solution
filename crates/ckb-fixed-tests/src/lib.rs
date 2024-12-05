@@ -16,6 +16,7 @@ pub enum Error {
     Log2,
     Sin,
     Sqrt,
+    Add,
 }
 
 pub fn initialize_wasmer() -> (Store, Instance) {
@@ -43,15 +44,14 @@ pub fn initialize_wasmer() -> (Store, Instance) {
     (store, instance)
 }
 
-pub fn i64f64_add(store: &mut Store, instance: &Instance, a: i32, b: i32) -> i32 {
-    // Call i64f64_add with input values
-    let add: TypedFunction<(i32, i32), i32> = instance
-        .exports
-        .get_function("i64f64_add")
-        .unwrap()
-        .typed(store)
-        .unwrap();
-    add.call(store, a, b).unwrap()
+pub fn i64f64_add(store: &mut Store, instance: &Instance, a: i32, b: i32) -> Result<i32, Error> {
+    call_with_result(
+        store,
+        instance,
+        "i64f64_add",
+        vec![Value::I32(a), Value::I32(b)],
+    )
+    .map_err(|_| Error::Add)
 }
 
 pub fn i64f64_ln(store: &mut Store, instance: &Instance, a: i32) -> Result<i32, Error> {
