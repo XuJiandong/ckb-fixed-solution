@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::should_implement_trait)]
+#![allow(clippy::inherent_to_string)]
 //! fixed point support for CKB on-chain script.
 //!
 //! This crate is based on [fixed](https://crates.io/crates/fixed).
