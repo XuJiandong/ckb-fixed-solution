@@ -9,7 +9,7 @@ fn test_basic() {
 
     let value = from_num(&mut store, &instance, 42).unwrap();
     let value2 = from_num(&mut store, &instance, 1).unwrap();
-    let result = i64f64_add(&mut store, &instance, value, value2);
+    let result = i64f64_add(&mut store, &instance, value, value2).unwrap();
     let rust_value = ckb_fixed::I64F64::from_num(43).unwrap();
 
     assert_eq!(
@@ -118,12 +118,12 @@ fn test_fuzzing_3() {
     ];
     let rust_value = ckb_fixed::I64F64::new(&bytes).unwrap();
     let rust_result = rust_value.sin();
-    assert!(rust_result.is_err());
+    assert!(rust_result.is_ok());
 
     let (mut store, instance) = initialize_wasmer();
     let wasm_value = new(&mut store, &instance, &bytes).unwrap();
     let result = i64f64_sin(&mut store, &instance, wasm_value);
-    assert!(result.is_err());
+    assert!(result.is_ok());
 }
 
 #[test]

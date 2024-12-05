@@ -260,11 +260,9 @@ where
     };
 
     let operand = D::from(operand);
-    let mut result = if let Some(r) = operand.checked_add(D::from_num(1)) {
-        r
-    } else {
-        return Err(Error::ExpOverflow);
-    };
+    let mut result = operand
+        .checked_add(D::from_num(1))
+        .ok_or(Error::ExpOverflow)?;
     let mut term = operand;
 
     for i in 2..D::FRAC_NBITS {
@@ -402,11 +400,10 @@ where
         + LossyFrom<U0F128>,
 {
     if angle > TWO_PI || angle < -TWO_PI {
-        let multiple = angle / T::lossy_from(TWO_PI);
-        let multiple = multiple.floor();
-        angle -= multiple
-            .checked_mul(T::lossy_from(TWO_PI))
+        let multiple = angle
+            .checked_next_multiple_of(T::lossy_from(TWO_PI))
             .ok_or(Error::SinOverflow)?;
+        angle -= multiple;
     }
     //wraparound
     while angle > PI {

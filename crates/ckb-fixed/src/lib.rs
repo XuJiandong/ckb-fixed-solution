@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::should_implement_trait)]
+#![allow(clippy::inherent_to_string)]
 //! fixed point support for CKB on-chain script.
 //!
 //! This crate is based on [fixed](https://crates.io/crates/fixed).
@@ -87,7 +88,8 @@ impl I64F64 {
     pub fn to_string(&self) -> String {
         self.inner.to_string()
     }
-    /// Create a new `I64F64` from a byte slice.
+    /// Create a new `I64F64` from its representation as a byte array in little endian.
+    /// See https://docs.rs/fixed/1.28.0/fixed/struct.FixedI128.html#method.from_le_bytes
     pub fn new(inner: &[u8]) -> Result<Self, FixedError> {
         let inner =
             types::I64F64::from_le_bytes(inner.try_into().map_err(|_| FixedError::InvalidLength)?);
@@ -110,33 +112,48 @@ impl I64F64 {
     pub fn to_le_bytes(&self) -> Vec<u8> {
         self.inner.to_le_bytes().to_vec()
     }
+    /// Create a new `I64F64` from its representation as a byte array in little endian.
+    #[cfg_attr(feature = "wasm-bindgen", wasm_bindgen(js_name = fromLeBytes))]
+    pub fn from_le_bytes(bytes: &[u8]) -> Result<I64F64, FixedError> {
+        let inner =
+            types::I64F64::from_le_bytes(bytes.try_into().map_err(|_| FixedError::InvalidLength)?);
+        Ok(I64F64 { inner })
+    }
     /// Add two `I64F64` numbers.
-    pub fn add(&self, b: &I64F64) -> I64F64 {
+    pub fn add(&self, b: &I64F64) -> Result<I64F64, FixedError> {
         let a = self.inner;
         let b = b.inner;
-        let inner = a + b;
-        I64F64 { inner }
+        let inner = a
+            .checked_add(b)
+            .ok_or(FixedError::Calculation("addition overflow"))?;
+        Ok(I64F64 { inner })
     }
     /// Subtract two `I64F64` numbers.
-    pub fn sub(&self, b: &I64F64) -> I64F64 {
+    pub fn sub(&self, b: &I64F64) -> Result<I64F64, FixedError> {
         let a = self.inner;
         let b = b.inner;
-        let inner = a - b;
-        I64F64 { inner }
+        let inner = a
+            .checked_sub(b)
+            .ok_or(FixedError::Calculation("subtraction overflow"))?;
+        Ok(I64F64 { inner })
     }
     /// Multiply two `I64F64` numbers.
-    pub fn mul(&self, b: &I64F64) -> I64F64 {
+    pub fn mul(&self, b: &I64F64) -> Result<I64F64, FixedError> {
         let a = self.inner;
         let b = b.inner;
-        let inner = a * b;
-        I64F64 { inner }
+        let inner = a
+            .checked_mul(b)
+            .ok_or(FixedError::Calculation("multiplication overflow"))?;
+        Ok(I64F64 { inner })
     }
     /// Divide `I64F64` numbers.
-    pub fn div(&self, b: &I64F64) -> I64F64 {
+    pub fn div(&self, b: &I64F64) -> Result<I64F64, FixedError> {
         let a = self.inner;
         let b = b.inner;
-        let inner = a / b;
-        I64F64 { inner }
+        let inner = a
+            .checked_div(b)
+            .ok_or(FixedError::Calculation("division by zero or overflow"))?;
+        Ok(I64F64 { inner })
     }
     /// Rounds to the next integer towards −∞.
     pub fn floor(&self) -> I64F64 {
